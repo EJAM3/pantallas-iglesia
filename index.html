@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Pantallas</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #1a1a2e; color: #eee; font-family: Arial, sans-serif; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 30px 16px; }
+    .container { background: #16213e; border-radius: 16px; padding: 36px 32px; width: 100%; max-width: 700px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+    h1 { text-align: center; font-size: 1.8em; color: #e94560; margin-bottom: 6px; }
+    .subtitle { text-align: center; color: #aaa; font-size: 0.9em; margin-bottom: 28px; }
+    label { display: block; font-size: 0.78em; letter-spacing: 1px; color: #aaa; margin-bottom: 6px; text-transform: uppercase; }
+    input[type=text], textarea { width: 100%; background: #0f3460; border: none; border-radius: 8px; color: #fff; padding: 12px 14px; font-size: 1em; margin-bottom: 20px; outline: none; }
+    textarea { height: 200px; resize: vertical; }
+    .opt-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+    .opt-grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-bottom: 20px; }
+    .opt-btn { padding: 12px 6px; border: 2px solid #0f3460; border-radius: 10px; background: #0f3460; color: #aaa; cursor: pointer; text-align: center; font-size: 0.95em; transition: all 0.2s; user-select: none; }
+    .opt-btn:hover { border-color: #e94560; color: #fff; }
+    .opt-btn.active { border-color: #e94560; background: #2a1040; color: #fff; }
+    .opt-btn .opt-name { font-weight: bold; font-size: 1.05em; display: block; }
+    .opt-btn .opt-sub { font-size: 0.7em; color: #888; display: block; margin-top: 2px; }
+    .opt-btn.active .opt-sub { color: #e94560; }
+    .controls-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .control-box { background: #0f3460; border-radius: 10px; padding: 14px 16px; }
+    .control-box label { margin-bottom: 10px; }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    input[type=range] { flex: 1; -webkit-appearance: none; height: 6px; background: #1a4a80; border-radius: 3px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #e94560; cursor: pointer; }
+    .size-val { color: #e94560; font-weight: bold; font-size: 1em; min-width: 45px; text-align: right; }
+    .color-row { display: flex; align-items: center; gap: 12px; }
+    input[type=color] { width: 44px; height: 44px; border: none; border-radius: 8px; background: none; cursor: pointer; padding: 0; }
+    .color-label { font-size: 0.85em; color: #ccc; }
+    .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: opacity 0.2s; margin-bottom: 10px; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #e94560; color: #fff; }
+    #status { margin-top: 16px; padding: 12px 16px; border-radius: 8px; display: none; font-size: 0.95em; }
+    .status-ok { background: #1b5e20; color: #a5d6a7; }
+    .status-err { background: #b71c1c; color: #ffcdd2; }
+    .status-info { background: #0d47a1; color: #bbdefb; }
+    #preview { margin-top: 24px; display: none; }
+    #preview h3 { color: #e94560; margin-bottom: 12px; font-size: 1em; }
+    .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 8px; }
+    .preview-item { position: relative; }
+    .preview-item canvas { width: 100%; border-radius: 4px; border: 1px solid #333; display: block; }
+    .preview-item .slide-num { position: absolute; top: 4px; left: 6px; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.7em; padding: 2px 6px; border-radius: 4px; }
+    #hiddenCanvas { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>&#127926; Generador de Pantallas</h1>
+  <p class="subtitle">PNGs con canal alfa para Resolume</p>
+  <label>Nombre de la cancion (opcional)</label>
+  <input type="text" id="titulo" placeholder="Ej: Santo, Santo, Santo...">
+  <label>Resolucion de exportacion</label>
+  <div class="opt-grid-3">
+    <div class="opt-btn active" onclick="setOpt(this,'res',1920,1080)"><span class="opt-name">Full HD</span><span class="opt-sub">1920 x 1080</span></div>
+    <div class="opt-btn" onclick="setOpt(this,'res',2560,1440)"><span class="opt-name">2K</span><span class="opt-sub">2560 x 1440</span></div>
+    <div class="opt-btn" onclick="setOpt(this,'res',3840,2160)"><span class="opt-name">4K UHD</span><span class="opt-sub">3840 x 2160</span></div>
+  </div>
+  <label>Lineas por pantalla</label>
+  <div class="opt-grid-5">
+    <div class="opt-btn active" onclick="setOpt(this,'lines',0)"><span class="opt-name">&#10022; Original</span><span class="opt-sub">segun estrofa</span></div>
+    <div class="opt-btn" onclick="setOpt(this,'lines',1)"><span class="opt-name">1</span><span class="opt-sub">linea</span></div>
+    <div class="opt-btn" onclick="setOpt(this,'lines',2)"><span class="opt-name">2</span><span class="opt-sub">lineas</span></div>
+    <div class="opt-btn" onclick="setOpt(this,'lines',3)"><span class="opt-name">3</span><span class="opt-sub">lineas</span></div>
+    <div class="opt-btn" onclick="setOpt(this,'lines',4)"><span class="opt-name">4</span><span class="opt-sub">lineas</span></div>
+  </div>
+  <div class="controls-row">
+    <div class="control-box">
+      <label>Tamano de letra</label>
+      <div class="slider-row">
+        <input type="range" id="fontSize" min="30" max="200" value="80" oninput="document.getElementById('fontSizeVal').textContent=this.value+'pt'">
+        <span class="size-val" id="fontSizeVal">80pt</span>
+      </div>
+    </div>
+    <div class="control-box">
+      <label>Color palabra clave</label>
+      <div class="color-row">
+        <input type="color" id="keyColor" value="#BF360C">
+        <span class="color-label" id="colorHex">#BF360C</span>
+      </div>
+    </div>
+  </div>
+  <label>Letra de la cancion</label>
+  <textarea id="letra" placeholder="Pega aqui la letra...&#10;&#10;Separa estrofas con linea en blanco."></textarea>
+  <button class="btn btn-primary" onclick="generarPNGs()">&#9654; Generar PNGs con canal alfa (ZIP)</button>
+  <div id="status"></div>
+  <div id="preview"><h3 id="previewTitle">Vista previa:</h3><div class="preview-grid" id="previewGrid"></div></div>
+</div>
+<canvas id="hiddenCanvas"></canvas>
+<script>
+var KW=["gracia","dios","senor","iglesia","jesus","cristo","rey","reino","padre","espiritu","santo","santa","gloria","amor","fe","salvacion","salvador","alabanza","adoracion","santidad","misericordia","eterno","eterna","majestad","omnipotente","jehova","emmanuel","cordero","luz","vida","verdad","poder"];
+var RW=1920,RH=1080,ML=0;
+document.getElementById('keyColor').addEventListener('input',function(){document.getElementById('colorHex').textContent=this.value.toUpperCase();});
+function setOpt(el,g,v1,v2){el.parentElement.querySelectorAll('.opt-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');if(g==='res'){RW=v1;RH=v2;}if(g==='lines'){ML=v1;}}
+function norm(t){return t.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();}
+function isKW(p){return KW.indexOf(norm(p.replace(/[^a-zA-ZÀ-ɏ]/g,'')))!==-1;}
+function groupOrig(txt){var g=[];txt.split(/
+s*
+/).forEach(function(b){var l=b.split('
+').map(function(x){return x.trim();}).filter(Boolean);if(l.length)g.push(l);});return g;}
+function groupFixed(lines,max){var g=[],i=0;while(i<lines.length){var gr=[];while(gr.length<max&&i<lines.length){gr.push(lines[i++]);}if(i<lines.length&&gr.length<max+1){var s=lines[i].trim().split(/s+/).filter(Boolean);if(s.length===1){gr.push(lines[i++]);}}g.push(gr);}if(g.length>1){var last=g[g.length-1];if(last.length===1&&last[0].trim().split(/s+/).filter(Boolean).length===1){g[g.length-2].push(last[0]);g.pop();}}return g;}
+function draw(ctx,lines,W,H,pt,kc){ctx.clearRect(0,0,W,H);var fs=Math.round(pt*(W/1920)),lh=Math.round(fs*1.75),ow=Math.round(3*(W/1920));ctx.font='bold '+fs+'pt Tahoma,Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';var tH=lines.length*lh,sY=(H-tH)/2+lh/2;lines.forEach(function(line,i){var y=sY+i*lh,toks=line.split(/(s+)/),tw=0;toks.forEach(function(t){tw+=ctx.measureText(t).width;});var sx=(W-tw)/2;toks.forEach(function(tok){if(/s+/.test(tok)){sx+=ctx.measureText(tok).width;return;}var w=ctx.measureText(tok).width;ctx.strokeStyle='rgba(0,0,0,0.95)';ctx.lineWidth=ow;ctx.lineJoin='round';ctx.strokeText(tok,sx,y);ctx.fillStyle=isKW(tok)?kc:'#FFF';ctx.fillText(tok,sx,y);sx+=w;});});}
+async function generarPNGs(){
+  var txt=document.getElementById('letra').value,tit=document.getElementById('titulo').value.trim()||'cancion',pt=parseInt(document.getElementById('fontSize').value),kc=document.getElementById('keyColor').value;
+  if(!txt.trim()){st('Por favor pega la letra.','err');return;}
+  var ml,gs;
+  if(ML===0){gs=groupOrig(txt);ml='Original';}else{gs=groupFixed(txt.split('
+').map(function(l){return l.trim();}).filter(Boolean),ML);ml=ML+' lineas';}
+  var rl=RW===3840?'4K':RW===2560?'2K':'1080p';
+  st('Procesando '+gs.length+' slides...','info');
+  var grid=document.getElementById('previewGrid');grid.innerHTML='';
+  document.getElementById('previewTitle').textContent='Vista previa ('+gs.length+' | '+rl+' | '+pt+'pt | '+ml+'):';
+  document.getElementById('preview').style.display='block';
+  var mc=document.getElementById('hiddenCanvas'),zip=new JSZip(),f=zip.folder(tit);
+  for(var i=0;i<gs.length;i++){
+    mc.width=RW;mc.height=RH;var ctx=mc.getContext('2d');draw(ctx,gs[i],RW,RH,pt,kc);
+    f.file(tit.replace(/[^a-zA-Z0-9]/g,'_')+'_'+String(i+1).padStart(3,'0')+'.png',mc.toDataURL('image/png').split(',')[1],{base64:true});
+    var PW=180,PH=Math.round(RH*(180/RW)),pc=document.createElement('canvas');pc.width=PW;pc.height=PH;
+    var px=pc.getContext('2d');px.fillStyle='#111';px.fillRect(0,0,PW,PH);px.drawImage(mc,0,0,PW,PH);
+    var it=document.createElement('div');it.className='preview-item';var n=document.createElement('div');n.className='slide-num';n.textContent=(i+1)+' ('+gs[i].length+'L)';it.appendChild(pc);it.appendChild(n);grid.appendChild(it);
+    if(i%5===0)await new Promise(function(r){setTimeout(r,0);});
+  }
+  st('Empaquetando ZIP...','info');await new Promise(function(r){setTimeout(r,10);});
+  var blob=await zip.generateAsync({type:'blob'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=tit.replace(/[^a-zA-Z0-9]/g,'_')+'_'+rl+'_'+pt+'pt_slides.zip';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  st('✅ Listo! '+gs.length+' slides | '+rl+' | '+pt+'pt | ZIP: '+(blob.size/1024/1024).toFixed(1)+' MB','ok');
+}
+function st(msg,t){var el=document.getElementById('status');el.style.display='block';el.className=t==='ok'?'status-ok':t==='err'?'status-err':'status-info';el.textContent=msg;}
+</script>
+</body>
+</html>
