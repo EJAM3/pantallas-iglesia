@@ -45,33 +45,28 @@ input[type=color] { width: 44px; height: 44px; border: none; border-radius: 8px;
 .preview-item { position: relative; }
 .preview-item canvas { width: 100%; border-radius: 4px; border: 1px solid #333; display: block; }
 .preview-item .slide-num { position: absolute; top: 4px; left: 6px; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.7em; padding: 2px 6px; border-radius: 4px; }
-#hiddenCanvas { display: none; }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>&#127926; Generador de Pantallas</h1>
   <p class="subtitle">PNGs con canal alfa para Resolume</p>
-
   <label>Nombre de la cancion (opcional)</label>
   <input type="text" id="titulo" placeholder="Ej: Santo, Santo, Santo...">
-
   <label>Resolucion de exportacion</label>
   <div class="opt-grid-3">
-    <div class="opt-btn active" id="btn-1920" onclick="setRes(this,1920,1080)"><span class="opt-name">Full HD</span><span class="opt-sub">1920 x 1080</span></div>
-    <div class="opt-btn" id="btn-2560" onclick="setRes(this,2560,1440)"><span class="opt-name">2K</span><span class="opt-sub">2560 x 1440</span></div>
-    <div class="opt-btn" id="btn-3840" onclick="setRes(this,3840,2160)"><span class="opt-name">4K UHD</span><span class="opt-sub">3840 x 2160</span></div>
+    <div class="opt-btn active" onclick="setRes(this,1920,1080)"><span class="opt-name">Full HD</span><span class="opt-sub">1920 x 1080</span></div>
+    <div class="opt-btn" onclick="setRes(this,2560,1440)"><span class="opt-name">2K</span><span class="opt-sub">2560 x 1440</span></div>
+    <div class="opt-btn" onclick="setRes(this,3840,2160)"><span class="opt-name">4K UHD</span><span class="opt-sub">3840 x 2160</span></div>
   </div>
-
   <label>Lineas por pantalla</label>
   <div class="opt-grid-5">
-    <div class="opt-btn" id="btn-orig" onclick="setLines(this,0)"><span class="opt-name">&#10022; Original</span><span class="opt-sub">segun estrofa</span></div>
-    <div class="opt-btn" id="btn-1" onclick="setLines(this,1)"><span class="opt-name">1</span><span class="opt-sub">linea</span></div>
-    <div class="opt-btn active" id="btn-2" onclick="setLines(this,2)"><span class="opt-name">2</span><span class="opt-sub">lineas</span></div>
-    <div class="opt-btn" id="btn-3" onclick="setLines(this,3)"><span class="opt-name">3</span><span class="opt-sub">lineas</span></div>
-    <div class="opt-btn" id="btn-4" onclick="setLines(this,4)"><span class="opt-name">4</span><span class="opt-sub">lineas</span></div>
+    <div class="opt-btn" onclick="setLines(this,0)"><span class="opt-name">&#10022; Original</span><span class="opt-sub">segun estrofa</span></div>
+    <div class="opt-btn" onclick="setLines(this,1)"><span class="opt-name">1</span><span class="opt-sub">linea</span></div>
+    <div class="opt-btn active" onclick="setLines(this,2)"><span class="opt-name">2</span><span class="opt-sub">lineas</span></div>
+    <div class="opt-btn" onclick="setLines(this,3)"><span class="opt-name">3</span><span class="opt-sub">lineas</span></div>
+    <div class="opt-btn" onclick="setLines(this,4)"><span class="opt-name">4</span><span class="opt-sub">lineas</span></div>
   </div>
-
   <div class="controls-row">
     <div class="control-box">
       <label>Tamano de letra</label>
@@ -88,79 +83,65 @@ input[type=color] { width: 44px; height: 44px; border: none; border-radius: 8px;
       </div>
     </div>
   </div>
-
   <label>Letra de la cancion</label>
   <textarea id="letra" placeholder="Pega aqui la letra...&#10;&#10;Separa estrofas con una linea en blanco para modo Original."></textarea>
-
-  <button class="btn btn-primary" id="btnGenerar" onclick="generarPNGs()">&#9654; Generar PNGs con canal alfa (ZIP)</button>
+  <button class="btn btn-primary" onclick="generarPNGs()">&#9654; Generar PNGs con canal alfa (ZIP)</button>
   <div id="status"></div>
-  <div id="preview">
-    <h3 id="previewTitle">Vista previa:</h3>
-    <div class="preview-grid" id="previewGrid"></div>
-  </div>
+  <div id="preview"><h3 id="previewTitle">Vista previa:</h3><div class="preview-grid" id="previewGrid"></div></div>
 </div>
 <canvas id="hiddenCanvas" style="display:none"></canvas>
-
 <script>
 var KW = ["gracia","dios","senor","iglesia","jesus","cristo","rey","reino","padre","espiritu","santo","santa","gloria","amor","fe","salvacion","salvador","alabanza","adoracion","santidad","misericordia","eterno","eterna","majestad","omnipotente","jehova","emmanuel","cordero","luz","vida","verdad","poder"];
 var RW = 1920, RH = 1080, ML = 2;
 
 function setRes(el, w, h) {
-  el.parentElement.querySelectorAll('.opt-btn').forEach(function(b){ b.classList.remove('active'); });
-  el.classList.add('active');
+  el.parentElement.querySelectorAll(".opt-btn").forEach(function(b){ b.classList.remove("active"); });
+  el.classList.add("active");
   RW = w; RH = h;
 }
 
 function setLines(el, n) {
-  el.parentElement.querySelectorAll('.opt-btn').forEach(function(b){ b.classList.remove('active'); });
-  el.classList.add('active');
+  el.parentElement.querySelectorAll(".opt-btn").forEach(function(b){ b.classList.remove("active"); });
+  el.classList.add("active");
   ML = n;
 }
 
 function norm(t) {
-  return t.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  return t.normalize("NFD").replace(/\u0300-\u036f/g,"").toLowerCase();
 }
 
 function isKW(word) {
-  var clean = norm(word.replace(/[^a-zA-ZÀ-ɏ]/g,''));
+  var clean = norm(word.replace(/[^a-zA-Z\u00C0-\u024F]/g,""));
   return KW.indexOf(clean) !== -1;
 }
 
 function groupOrig(txt) {
   var groups = [];
-  var stanzas = txt.split(/
-s*
-/);
+  var stanzas = txt.split(/\n\s*\n/);
   stanzas.forEach(function(block) {
-    var lines = block.split('
-').map(function(l){ return l.trim(); }).filter(Boolean);
+    var lines = block.split("\n").map(function(l){ return l.trim(); }).filter(Boolean);
     if (lines.length > 0) groups.push(lines);
   });
   return groups;
 }
 
 function groupFixed(txt, max) {
-  var allLines = txt.split('
-').map(function(l){ return l.trim(); }).filter(Boolean);
+  var allLines = txt.split("\n").map(function(l){ return l.trim(); }).filter(Boolean);
   var groups = [], i = 0;
   while (i < allLines.length) {
     var gr = [];
     while (gr.length < max && i < allLines.length) {
       gr.push(allLines[i++]);
     }
-    // Anti-orphan: absorb next line if it has only 1 word
     if (i < allLines.length && gr.length < max + 1) {
-      var nextWords = allLines[i].trim().split(/s+/).filter(Boolean);
-      if (nextWords.length === 1) {
-        gr.push(allLines[i++]);
-      }
+      var nextWords = allLines[i].trim().split(/\s+/).filter(Boolean);
+      if (nextWords.length === 1) { gr.push(allLines[i++]); }
     }
     groups.push(gr);
   }
-  // Post-process: last group with 1 line of 1 word -> move to previous
   if (groups.length > 1) {
     var last = groups[groups.length - 1];
-    if (last.length === 1 && last[0].trim().split(/s+/).filter(Boolean).length === 1) {
+    if (last.length === 1 && last[0].trim().split(/\s+/).filter(Boolean).length === 1) {
       groups[groups.length - 2].push(last[0]);
       groups.pop();
     }
@@ -174,41 +155,28 @@ function drawSlide(ctx, lines, W, H, pt, keyColor) {
   var fontSize = Math.round(pt * scale);
   var lineHeight = Math.round(fontSize * 1.5);
   var outlineWidth = Math.max(2, Math.round(4 * scale));
-
-  ctx.font = 'bold ' + fontSize + 'px Tahoma, Arial, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-
+  ctx.font = "bold " + fontSize + "px Tahoma, Arial, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
   var totalH = lines.length * lineHeight;
   var startY = (H - totalH) / 2 + lineHeight / 2;
-
-  // Margins
   var marginX = Math.round(60 * scale);
-
   lines.forEach(function(line, i) {
     var y = startY + i * lineHeight;
-    // Measure full line width for centering
-    var tokens = line.split(/(s+)/);
+    var tokens = line.split(/(\s+)/);
     var totalW = 0;
     tokens.forEach(function(tok) { totalW += ctx.measureText(tok).width; });
-    // Clamp to canvas width with margins
     var startX = (W - totalW) / 2;
     if (startX < marginX) startX = marginX;
-
     var x = startX;
     tokens.forEach(function(tok) {
-      if (/^s+$/.test(tok)) {
-        x += ctx.measureText(tok).width;
-        return;
-      }
+      if (/^\s+$/.test(tok)) { x += ctx.measureText(tok).width; return; }
       var w = ctx.measureText(tok).width;
-      // Draw outline
-      ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+      ctx.strokeStyle = "rgba(0,0,0,0.9)";
       ctx.lineWidth = outlineWidth;
-      ctx.lineJoin = 'round';
+      ctx.lineJoin = "round";
       ctx.strokeText(tok, x, y);
-      // Draw fill
-      ctx.fillStyle = isKW(tok) ? keyColor : '#FFFFFF';
+      ctx.fillStyle = isKW(tok) ? keyColor : "#FFFFFF";
       ctx.fillText(tok, x, y);
       x += w;
     });
@@ -216,92 +184,63 @@ function drawSlide(ctx, lines, W, H, pt, keyColor) {
 }
 
 async function generarPNGs() {
-  var txt = document.getElementById('letra').value;
-  var tit = document.getElementById('titulo').value.trim() || 'cancion';
-  var pt = parseInt(document.getElementById('fontSize').value);
-  var kc = document.getElementById('keyColor').value;
-
-  if (!txt.trim()) {
-    showStatus('Por favor pega la letra de la cancion.', 'err');
-    return;
-  }
-
-  var groups;
-  var modeLabel;
-  if (ML === 0) {
-    groups = groupOrig(txt);
-    modeLabel = 'Original';
-  } else {
-    groups = groupFixed(txt, ML);
-    modeLabel = ML + ' lineas';
-  }
-
-  var resLabel = RW === 3840 ? '4K' : RW === 2560 ? '2K' : '1080p';
-  showStatus('Procesando ' + groups.length + ' slides (' + resLabel + ' | ' + pt + 'pt | ' + modeLabel + ')...', 'info');
-
-  var previewGrid = document.getElementById('previewGrid');
-  previewGrid.innerHTML = '';
-  document.getElementById('previewTitle').textContent = 'Vista previa (' + groups.length + ' slides | ' + resLabel + ' | ' + pt + 'pt | ' + modeLabel + '):';
-  document.getElementById('preview').style.display = 'block';
-
-  var mc = document.getElementById('hiddenCanvas');
+  var txt = document.getElementById("letra").value;
+  var tit = document.getElementById("titulo").value.trim() || "cancion";
+  var pt = parseInt(document.getElementById("fontSize").value);
+  var kc = document.getElementById("keyColor").value;
+  if (!txt.trim()) { showStatus("Por favor pega la letra de la cancion.", "err"); return; }
+  var groups, modeLabel;
+  if (ML === 0) { groups = groupOrig(txt); modeLabel = "Original"; }
+  else { groups = groupFixed(txt, ML); modeLabel = ML + " lineas"; }
+  var resLabel = RW === 3840 ? "4K" : RW === 2560 ? "2K" : "1080p";
+  showStatus("Procesando " + groups.length + " slides (" + resLabel + " | " + pt + "pt | " + modeLabel + ")...", "info");
+  var previewGrid = document.getElementById("previewGrid");
+  previewGrid.innerHTML = "";
+  document.getElementById("previewTitle").textContent = "Vista previa (" + groups.length + " slides | " + resLabel + " | " + pt + "pt | " + modeLabel + "):";
+  document.getElementById("preview").style.display = "block";
+  var mc = document.getElementById("hiddenCanvas");
   var zip = new JSZip();
   var folder = zip.folder(tit);
-  var safeName = tit.replace(/[^a-zA-Z0-9_-]/g, '_');
-
+  var safeName = tit.replace(/[^a-zA-Z0-9_\-]/g, "_");
   for (var i = 0; i < groups.length; i++) {
-    mc.width = RW;
-    mc.height = RH;
-    var ctx = mc.getContext('2d');
+    mc.width = RW; mc.height = RH;
+    var ctx = mc.getContext("2d");
     drawSlide(ctx, groups[i], RW, RH, pt, kc);
-
-    // Add to ZIP
-    var dataURL = mc.toDataURL('image/png');
-    var base64 = dataURL.split(',')[1];
-    var filename = safeName + '_' + String(i + 1).padStart(3, '0') + '.png';
+    var dataURL = mc.toDataURL("image/png");
+    var base64 = dataURL.split(",")[1];
+    var filename = safeName + "_" + String(i + 1).padStart(3, "0") + ".png";
     folder.file(filename, base64, { base64: true });
-
-    // Create preview thumbnail
     var PW = 180, PH = Math.round(RH * (180 / RW));
-    var pc = document.createElement('canvas');
+    var pc = document.createElement("canvas");
     pc.width = PW; pc.height = PH;
-    var pctx = pc.getContext('2d');
-    pctx.fillStyle = '#222';
-    pctx.fillRect(0, 0, PW, PH);
+    var pctx = pc.getContext("2d");
+    pctx.fillStyle = "#222"; pctx.fillRect(0, 0, PW, PH);
     pctx.drawImage(mc, 0, 0, PW, PH);
-
-    var item = document.createElement('div');
-    item.className = 'preview-item';
-    var numLabel = document.createElement('div');
-    numLabel.className = 'slide-num';
-    numLabel.textContent = (i + 1) + ' (' + groups[i].length + 'L)';
-    item.appendChild(pc);
-    item.appendChild(numLabel);
+    var item = document.createElement("div");
+    item.className = "preview-item";
+    var numLabel = document.createElement("div");
+    numLabel.className = "slide-num";
+    numLabel.textContent = (i + 1) + " (" + groups[i].length + "L)";
+    item.appendChild(pc); item.appendChild(numLabel);
     previewGrid.appendChild(item);
-
     if (i % 5 === 0) await new Promise(function(r){ setTimeout(r, 0); });
   }
-
-  showStatus('Empaquetando ZIP...', 'info');
+  showStatus("Empaquetando ZIP...", "info");
   await new Promise(function(r){ setTimeout(r, 10); });
-
-  var blob = await zip.generateAsync({ type: 'blob' });
+  var blob = await zip.generateAsync({ type: "blob" });
   var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
+  var a = document.createElement("a");
   a.href = url;
-  a.download = safeName + '_' + resLabel + '_' + pt + 'pt_slides.zip';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  a.download = safeName + "_" + resLabel + "_" + pt + "pt_slides.zip";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-
-  showStatus('Listo! ' + groups.length + ' slides | ' + resLabel + ' | ' + pt + 'pt | ZIP: ' + (blob.size / 1024 / 1024).toFixed(1) + ' MB', 'ok');
+  showStatus("Listo! " + groups.length + " slides | " + resLabel + " | " + pt + "pt | ZIP: " + (blob.size/1024/1024).toFixed(1) + " MB", "ok");
 }
 
 function showStatus(msg, type) {
-  var el = document.getElementById('status');
-  el.style.display = 'block';
-  el.className = type === 'ok' ? 'status-ok' : type === 'err' ? 'status-err' : 'status-info';
+  var el = document.getElementById("status");
+  el.style.display = "block";
+  el.className = type === "ok" ? "status-ok" : type === "err" ? "status-err" : "status-info";
   el.textContent = msg;
 }
 </script>
